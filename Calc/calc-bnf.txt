@@ -1,0 +1,29 @@
+< Program >    ::= < Program > < Statement >
+                   | < Statement >
+
+< Statement >  ::= < Expression > "\n"
+
+< Expression > ::= < Expression > "+" < Term >
+                   | < Expression > "-" < Term >
+                   | < Term >
+
+< Term >       ::= < Term > "*" < Factor >
+                   | < Term > "/" < Factor >
+                   | < Term > "MOD" < Factor >
+                   | < Factor >
+
+< Factor >     ::= < Factor > "^" < Exponent >
+                   | < Exponent >
+
+< Exponent >   ::= < Number >
+                   | "-" < Exponent >
+                   | "(" < Expression > ")"
+
+< Number >     ::=  < Integer > | < Real >
+
+< Integer >    ::= < Number > < Digit >
+                   | < Digit >
+
+< Real >       ::= < Integer > "." < Integer >
+
+< Digit >      ::= "0" | "1" | "2" | ... | "9"
