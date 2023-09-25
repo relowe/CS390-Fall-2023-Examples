@@ -10,5 +10,6 @@ public enum Token {
     RPAREN,
     NEWLINE,
     INTLIT,
-    REALLIT
+    REALLIT,
+    MOD
 }

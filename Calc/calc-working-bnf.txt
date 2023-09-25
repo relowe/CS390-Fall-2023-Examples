@@ -1,3 +1,9 @@
+To eliminate left recursion
+Convert: A -> Aa1 | Aa2 | ... | Aan | B
+To: 
+  A -> BA'
+  A' -> a1 A' | a2 A' | ... | ""
+
 Context-Free Portion
 ====================
 < Program >    ::= < Program > < Statement >
@@ -5,17 +11,23 @@ Context-Free Portion
 
 < Statement >  ::= < Expression > NEWLINE
 
-< Expression > ::= < Expression > PLUS < Term >
-                   | < Expression > MINUS < Term >
-                   | < Term >
+< Expression > ::= < Term > < Expression' >
 
-< Term >       ::= < Term > TIMES < Factor >
-                   | < Term > DIVIDE < Factor >
-                   | < Term > MOD < Factor >
-                   | < Factor >
+< Expression' > ::= PLUS < Term > < Expression' >
+                   | MINUS < Term > < Expression' >
+                   | ""
 
-< Factor >     ::= < Factor > POW < Exponent >
-                   | < Exponent >
+< Term >       ::= < Factor > < Term' >
+
+< Term' >      ::= TIMES < Factor > < Term' >
+                   | DIVIDE < Factor > < Term' >
+                   | MOD < Factor > < Term' >
+                   | ""
+
+< Factor >     ::= < Exponent > < Factor' >
+
+< Factor' >    ::= POW < Exponent > < Factor' >
+                   | ""
 
 < Exponent >   ::= < Number >
                    | MINUS < Exponent >
@@ -35,3 +47,4 @@ RPAREN          )
 NEWLINE         \n
 INTLIT          [0-9]+
 REALLIT         [0-9]+\.[0-9]+
+MOD             MOD
