@@ -73,6 +73,10 @@ public class Lexer {
         return curLex;
     }
 
+    public Lexeme cur() {
+      return curLex;
+    }
+
     /// Match our single character tokens
     /// Return true on success, false on failure.
     public boolean match_single() {
