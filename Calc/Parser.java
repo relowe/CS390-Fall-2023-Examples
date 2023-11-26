@@ -6,9 +6,9 @@
     this.lexer = lexer;
   }
 
-  public void parse() {
+  public ParseTree parse() {
     this.lexer.next();  //linitialize the lexer
-    parseProgram();
+    return parseProgram();
   }
 
   /**
@@ -42,32 +42,196 @@
     return l;
   }
 
+  /**
+   * Return true if one of the tokens in the list are
+   * currently in the lexer
+   */
+  private boolean has(Token... tokens) {
+    Lexeme l = lexer.cur();
+    for(Token t : tokens) {
+      if(l.tok == t) return true;
+    }
+    return false;
+  }
 
   /**
   < Program >    ::= < Program > < Statement >
                    | < Statement >
    */
-  private void parseProgram() {
-    while(lexer.cur().tok != Token.EOF) {
-      parseStatement();
+  private ParseTree parseProgram() {
+    Program result = new Program();
+    
+    while(lexer.cur().tok != Token.EOF && lexer.cur().tok != Token.END) {
+      ParseTree statement = parseStatement();
+      if(statement != null) {
+        result.addChild(statement);
+      }
     }
+
+    return result;
   }
 
 
   /**
-  < Statement >  ::= < Expression > NEWLINE
+  < Statement >  ::= ID < Statement' > NEWLINE
+                     | < IO-Operation > NEWLINE
+                     | < Branch > NEWLINE
+                     | < LOOP > NEWLINE
+                     | < Expression > NEWLINE
+                     | NEWLINE
   */
-  private void parseStatement() {
-    parseExpression();
+  private ParseTree parseStatement() {
+    ParseTree result = null;
+    Lexeme tok;
+
+    if((tok = match(Token.ID)) != null) {
+      // Handle an ID statement / expression
+      result = new Variable(tok);
+      result = parseStatement2(result);
+    } else if(has(Token.INPUT, Token.DISPLAY)) {
+      result = parseIOOperation();
+    } else if(has(Token.IF)) {
+      result = parseBranch();
+    } else if(has(Token.WHILE)) {
+      result = parseLoop();
+    } else if(!has(Token.NEWLINE)) {
+      result = parseExpression();
+    }
+    
+    if(match(Token.EOF) == null) {
+      mustBe(Token.NEWLINE);
+    }
+    return result;
+  }
+
+  /**
+  < Statement' >  ::= EQUAL < Expression >
+                      | < Factor' > < Term' > < Expression' >
+  */
+  private ParseTree parseStatement2(ParseTree left) {
+    // match an assignment
+    if(match(Token.EQUAL) != null) {
+      Assignment result = new Assignment();
+      result.setLeft(left);
+      result.setRight(parseExpression());
+      return result;
+    }
+
+    // an expression beginning with an ID
+    ParseTree result = parseFactor2(left);
+    result = parseTerm2(result);
+    result = parseExpression2(result);
+    return result;
+  }
+
+  
+
+
+  /**
+   < Branch >     ::= IF < Condition > NEWLINE < Program > END IF
+   */
+  private ParseTree parseBranch() {
+    mustBe(Token.IF);
+    ParseTree condition = parseCondition();
     mustBe(Token.NEWLINE);
+    ParseTree program = parseProgram();
+    mustBe(Token.END);
+    mustBe(Token.IF);
+    
+    Branch result = new Branch();
+    result.setLeft(condition);
+    result.setRight(program);
+    return result;
+  }
+
+  /**
+   < Loop >        ::= WHILE < Condition > NEWLINE < Program > END WHILE
+  */
+  private ParseTree parseLoop() {
+    mustBe(Token.WHILE);
+    ParseTree condition = parseCondition();
+    mustBe(Token.NEWLINE);
+    ParseTree program = parseProgram();
+    mustBe(Token.END);
+    mustBe(Token.WHILE);
+
+    Loop result = new Loop();
+    result.setLeft(condition);
+    result.setRight(program);
+
+    return result;
+  }
+
+
+  /**
+   < Condition >  ::= < Expression > < Condition' >
+   */
+  private ParseTree parseCondition() {
+    ParseTree left = parseExpression();
+    return parseCondition2(left);
+  }
+
+
+  /**
+   < Condition' > ::= EQUAL < Expression > 
+   < Condition' > ::= GT < Expression >
+                      | LT < Expression >
+                      | LTE < Expression >
+                      | GTE < Expression >
+                      | EQUAL < Expression >
+                      | NE < Expression >
+   */
+  private ParseTree parseCondition2(ParseTree left) {
+    BinaryOp result;
+
+    if(match(Token.GT) != null) {
+      result = new Greater();
+    } else if(match(Token.LT)!=null) {
+      result = new Less(); 
+    } else if(match(Token.LTE)!=null) {
+      result = new LessOrEqual();
+    } else if(match(Token.EQUAL) != null) {
+      result = new Equal();
+    } else if(mustBe(Token.NE) != null) {
+      result = new NotEqual();
+    } else {
+      return null;
+    }
+    
+    result.setLeft(left);
+    result.setRight(parseExpression());
+    
+    return result;
+  }
+
+
+
+  
+  
+  /** 
+  < IO-Operation > ::= DISPLAY < Expression >
+                       | INPUT ID
+  */
+  private ParseTree parseIOOperation() {
+    if(match(Token.DISPLAY) != null) {
+      Display result = new Display();
+      result.setChild(parseExpression());
+      return result;
+    }
+
+    mustBe(Token.INPUT);
+    Lexeme tok = mustBe(Token.ID);
+    Input result = new Input();
+    result.setChild(new Variable(tok));
+    return result;
   }
 
   /**
   < Term >       ::= < Factor > < Term' >
   */
-  private void parseTerm() {
-    parseFactor();
-    parseTerm2();
+  private ParseTree parseTerm() {
+    ParseTree left = parseFactor();
+    return parseTerm2(left);
   }
   
   /**
@@ -76,32 +240,44 @@
                    | MOD < Factor > < Term' >
                    | ""
   */
-  private void parseTerm2() {
+ private ParseTree parseTerm2(ParseTree left) {
     if(match(Token.TIMES) != null) {
-        parseFactor();
-        parseTerm2();
-        return;
+        Multiply result = new Multiply();
+        result.setLeft(left);
+        result.setRight(parseFactor());
+        return parseTerm2(result);
     } else if(match(Token.DIVIDE) != null) {
-        parseFactor();
-        parseTerm2();
-        return;
+        Divide result = new Divide();
+        result.setLeft(left);
+        result.setRight(parseTerm());
+        return parseTerm2(result);
+      
     } else if(match(Token.MOD) != null) {
-        parseFactor();
-        parseTerm2();
-        return;
+        Mod result  = new Mod();
+        result.setLeft(left);
+        result.setRight(parseFactor());
+        return parseTerm2(result);
     }
     
+    return left; 
   }
 
   /** 
-  < Number >     ::= INTLIT | REALLIT
+  < Number >     ::= INTLIT | REALLIT | ID
   */
-  private void parseNumber() {
-    if (match(Token.INTLIT) != null) {
-      return;
+  private ParseTree parseNumber() {
+    Lexeme tok = match(Token.INTLIT);
+    if (tok != null) { 
+      return new Literal(tok);
     }
 
-    mustBe(Token.REALLIT);
+    tok = match(Token.ID);
+    if(tok != null) {
+      return new Variable(tok);
+    }
+
+    tok = mustBe(Token.REALLIT);
+    return new Literal(tok);
   }
 
   
@@ -113,25 +289,25 @@
                    | LPAREN < Expression > RPAREN
   */
 
-  private void parseExponent(){
+  private ParseTree parseExponent(){
     if(match(Token.MINUS) != null){
-      parseExponent();
-      return;
+      Negate result = new Negate();
+      result.setChild(parseExponent());
+      return result;
     } else if(match(Token.LPAREN) != null){
-      parseExpression();
+      ParseTree result = parseExpression();
       mustBe(Token.RPAREN);
-      return;
+      return result;
     } else {
-      parseNumber();
-      return;
+      return parseNumber();
     }
   }
 
 // < Expression > ::= < Term > < Expression' >
   
- private void parseExpression() {
-    parseTerm();
-    parseExpression2();
+ private ParseTree parseExpression() {
+    ParseTree left = parseTerm();
+    return parseExpression2(left);
  }
   
 /**
@@ -139,28 +315,30 @@
                    | MINUS < Term > < Expression' >
                    | ""
  */
-
-
-public void parseExpression2(){
+public ParseTree parseExpression2(ParseTree left){
   if (match(Token.PLUS) != null){
-    parseTerm();
-    parseExpression2();
-    return;
+    Add result = new Add();
+    result.setLeft(left);
+    result.setRight(parseTerm());
+    return parseExpression2(result);
   } else if (match(Token.MINUS) != null){
-    parseTerm();
-    parseExpression2();
-    return;
+    Subtract result = new Subtract();
+    result.setLeft(left);
+    result.setRight(parseTerm());
+    return parseExpression2(result);
   } 
+
+  // ""
+  return left;
 }
 
 /*
 < Factor >     ::= < Exponent > < Factor' >
 
 */
-public void parseFactor(){
-  parseExponent();
-  parseFactor2();
-  return;
+public ParseTree parseFactor(){
+  ParseTree left = parseExponent();
+  return parseFactor2(left);
 }
 
 
@@ -168,12 +346,15 @@ public void parseFactor(){
    < Factor' >    ::= POW < Exponent > < Factor' >
                       | ""
    */
-public void parseFactor2(){
+public ParseTree parseFactor2(ParseTree left){
   if (match(Token.POW) != null){
-    parseExponent();
-    parseFactor2();
-    return;
+    Power result = new Power();
+    result.setLeft(left);
+    result.setRight(parseExponent());
+    return parseFactor2(result);
   }
+
+  return left;
 }
 
   /** 
@@ -183,6 +364,6 @@ public void parseFactor2(){
     Lexer lexer = new Lexer(System.in);
     Parser parser = new Parser(lexer);
 
-    parser.parse();
+    parser.parse().print(0);
   }
 }

@@ -1,4 +1,5 @@
-public interface Parsetree
+public interface ParseTree
 {
-  public EvalResult eval();    
+  public EvalResult eval(RefEnv env);    
+  public void print(int depth);
 }

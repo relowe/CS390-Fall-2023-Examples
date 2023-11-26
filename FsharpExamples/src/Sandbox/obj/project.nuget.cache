@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "FMLyQFKevD4utvLV28QkvSgTLlJKyHmTq31HPfNdCM+FrOsiPJrBN87unkop2Byv33FjpA1NFoEcgcQ8if/10g==",
+  "success": true,
+  "projectFilePath": "/home/runner/CS390-Fall-2023-Examples/FsharpExamples/src/Sandbox/Sandbox.fsproj",
+  "expectedPackageFiles": [
+    "/home/runner/.nuget/packages/fsharp.core/7.0.0/fsharp.core.7.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

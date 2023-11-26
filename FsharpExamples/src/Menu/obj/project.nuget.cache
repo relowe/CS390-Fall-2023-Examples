@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "D/eUIG3YvEW7amDsuf23me5m4AOUn9FDF+NxLI+MsLG9/GWY17XNd4NnJR2aWHfevrLLMGXMKu2HEWZQQEFpuw==",
+  "success": true,
+  "projectFilePath": "/home/runner/CS390-Fall-2023-Examples/FsharpExamples/src/Menu/Menu.fsproj",
+  "expectedPackageFiles": [
+    "/home/runner/.nuget/packages/fsharp.core/7.0.0/fsharp.core.7.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

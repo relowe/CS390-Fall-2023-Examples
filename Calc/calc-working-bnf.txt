@@ -9,7 +9,46 @@ Context-Free Portion
 < Program >    ::= < Program > < Statement >
                    | < Statement >
 
-< Statement >  ::= < Expression > NEWLINE
+< Statement >  ::= ID < Statement' > NEWLINE
+                   | < IO-Operation > NEWLINE
+                   | < Array-Dim > NEWLINE
+                   | < Record-Decl > NEWLINE
+                   | < Branch > NEWLINE
+                   | < Loop > NEWLINE
+                   | < Expression > NEWLINE
+                   | NEWLINE
+
+< Statement' >  ::= < Ref' > < Statement''> 
+< Statement'' >  ::= EQUAL < Expression >
+                    | < Factor' > < Term' > < Expression' >
+                    
+< Branch >     ::= IF < Condition > NEWLINE < Program > END IF
+
+< Loop >       ::= WHILE < Condition > NEWLINE < Program > END WHILE
+
+< Condition >  ::= < Expression > < Condition' >
+
+< Condition' > ::= GT < Expression >
+                   | LT < Expression >
+                   | LTE < Expression >
+                   | GTE < Expression >
+                   | EQUAL < Expression >
+                   | NE < Expression >
+                   
+< IO-Operation > ::= DISPLAY < Expression >
+                     | INPUT ID
+                     
+< Array-Dim >  ::= DIMENSION ID < Expression >
+
+< Record-Decl > ::= RECORD ID < Record-Fields > END RECORD
+
+< Record-Fields > ::= < Record-Fields > < Field >
+                      | < Field >
+
+< Field >         ::= FIELD < Field' > 
+
+< Field' >        ::= ID
+                      | < Array-Dim >
 
 < Expression > ::= < Term > < Expression' >
 
@@ -33,7 +72,13 @@ Context-Free Portion
                    | MINUS < Exponent >
                    | LPAREN < Expression > RPAREN
 
-< Number >     ::= INTLIT | REALLIT
+< Number >     ::= INTLIT | REALLIT | < Ref >
+
+< Ref >        ::= ID < Ref' >
+
+< Ref' >       ::= LBRACKET < Expression > RBRACKET < Ref' >
+                   | DOT ID < Ref' >
+                   | ""
 
 Lexer Grammar
 =============
@@ -48,3 +93,21 @@ NEWLINE         \n
 INTLIT          [0-9]+
 REALLIT         [0-9]+\.[0-9]+
 MOD             MOD
+EQUAL           =
+DISPLAY         display
+INPUT           input
+ID              [a-zA-Z_][a-zA-Z_0-9]*
+IF              if
+END             end
+WHILE           while
+GT              >
+GTE             >=
+LT              <
+LTE             <=
+NE              <>
+LBRACKET        [
+RBRACKET        ]
+DOT             .
+DIMENSION       dimension
+RECORD          record
+FIELD           field
