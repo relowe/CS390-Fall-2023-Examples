@@ -28,8 +28,8 @@ public class EvalResult
   }
 
 
-  public void setValue(RecordDecl recordDecl) {
-    type = Evaltype.RECORD_DECL;
+  public void setValue(RecordDeclaration recordDecl) {
+    type = EvalType.RECORD_DECL;
     this.recordDecl = recordDecl;
   }
 

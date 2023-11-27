@@ -1,7 +1,7 @@
-public class RecordDecl extends NaryOp {
+public class RecordDeclaration extends NaryOp {
   private Lexeme id;
   
-  public RecordDecl(Lexeme id) {
+  public RecordDeclaration(Lexeme id) {
     this.id = id;
   }
 
@@ -17,12 +17,11 @@ public class RecordDecl extends NaryOp {
     return null;
   }
 
-  public void print(int indent) {
+  public void print(int depth) {
     System.out.printf("%"+(depth+1)+"sRECORD %s\n", "", id.str);
     
     for(int i=0; i<getSize(); i++) {
       getChild(i).print(depth+1);
     }
-  }
   }
 }
