@@ -3,8 +3,10 @@ public class ArrayDimension extends BinaryOp
   public EvalResult eval(RefEnv env)
   {
     //create the array
-    int n = getRight().eval(env).asInt();
-    EvalResult [] value = new EvalResult[n];
+    int n = getRight().eval(env).asInteger();
+    EvalResult [] array = new EvalResult[n];
+    EvalResult value = new EvalResult();
+    value.setValue(array);
 
     //store the array
     Variable var = (Variable) getLeft();

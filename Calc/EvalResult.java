@@ -5,7 +5,7 @@ public class EvalResult
   private double d;
   private boolean b;
   private RecordDeclaration recordDecl;
-  private double [] array;
+  private EvalResult [] array;
 
   public EvalResult() {
     type = EvalType.VOID;
@@ -67,7 +67,7 @@ public class EvalResult
   }
 
   public EvalResult [] asArray() {
-    if(EvalType != EvalType.ARRAY) return null;
+    if(type != EvalType.ARRAY) return null;
     return array;
   }
 

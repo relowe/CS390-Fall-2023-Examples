@@ -6,7 +6,7 @@ public class Display extends UnaryOp {
 
   private void display(EvalResult result) {
     if(result.getType() == EvalType.ARRAY) {
-      display_array(result.getArray());
+      display_array(result.asArray());
     } else {
       System.out.println(result);
     }

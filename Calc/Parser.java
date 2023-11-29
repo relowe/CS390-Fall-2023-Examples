@@ -85,9 +85,9 @@
     ParseTree result = null;
     Lexeme tok;
 
-    if((tok = match(Token.ID)) != null) {
+    if(has(Token.ID)) { 
       // Handle an ID statement / expression
-      result = new Variable(tok);
+      result = parseRef();
       result = parseStatement2(result);
     } else if(has(Token.INPUT, Token.DISPLAY)) {
       result = parseIOOperation();
@@ -131,8 +131,8 @@
   < Array-Dim >  ::= DIMENSION ID < Expression >
   */
   private ParseTree parseArrayDimension() {
-    match(Token.DIMENSION);
-    ParseTree left = new Variable(match(Token.ID));
+    mustBe(Token.DIMENSION);
+    ParseTree left = new Variable(mustBe(Token.ID));
     ParseTree right = parseExpression();
     ArrayDimension result = new ArrayDimension();
     result.setLeft(left);
@@ -228,7 +228,7 @@
   
   /** 
   < IO-Operation > ::= DISPLAY < Expression >
-                       | INPUT ID
+                       | INPUT < Ref >
   */
   private ParseTree parseIOOperation() {
     if(match(Token.DISPLAY) != null) {
@@ -238,9 +238,8 @@
     }
 
     mustBe(Token.INPUT);
-    Lexeme tok = mustBe(Token.ID);
     Input result = new Input();
-    result.setChild(new Variable(tok));
+    result.setChild(parseRef());
     return result;
   }
 
@@ -281,7 +280,7 @@
   }
 
   /** 
-  < Number >     ::= INTLIT | REALLIT | ID
+  < Number >     ::= INTLIT | REALLIT | < Ref >
   */
   private ParseTree parseNumber() {
     Lexeme tok = match(Token.INTLIT);
@@ -289,16 +288,48 @@
       return new Literal(tok);
     }
 
-    tok = match(Token.ID);
-    if(tok != null) {
-      return new Variable(tok);
+    if(has(Token.ID)) {
+        return parseRef();
     }
 
     tok = mustBe(Token.REALLIT);
     return new Literal(tok);
   }
 
-  
+    /* 
+    < Ref >        ::= ID < Ref' >
+    */
+    ParseTree parseRef() {
+        Lexeme tok = mustBe(Token.ID);
+
+        return parseRef2(new Variable(tok));
+    }
+
+
+    /* 
+    < Ref' >       ::= LBRACKET < Expression > RBRACKET < Ref' >
+                       | DOT ID < Ref' >
+                       | ""
+    */
+    ParseTree parseRef2(ParseTree left) {
+        if(match(Token.LBRACKET) != null) {
+            // array access
+            ArrayAccess result = new ArrayAccess();
+            result.setLeft(left);
+            result.setRight(parseExpression());
+            mustBe(Token.RBRACKET);
+            return parseRef2(result);
+        } else if(match(Token.DOT) != null) {
+            // record access
+            RecordAccess result = new RecordAccess();
+            result.setLeft(left);
+            result.setRight(new Variable(mustBe(Token.ID)));
+            return parseRef2(result);
+        }
+
+        // null string
+        return left;
+    }
 
   
   /**
@@ -350,30 +381,30 @@ public ParseTree parseExpression2(ParseTree left){
   return left;
 }
 
-/*
-< Factor >     ::= < Exponent > < Factor' >
+    /*
+    < Factor >     ::= < Exponent > < Factor' >
 
-*/
-public ParseTree parseFactor(){
-  ParseTree left = parseExponent();
-  return parseFactor2(left);
-}
+    */
+    public ParseTree parseFactor(){
+      ParseTree left = parseExponent();
+      return parseFactor2(left);
+    }
 
 
-  /**
-   < Factor' >    ::= POW < Exponent > < Factor' >
+    /**
+    < Factor' >    ::= POW < Exponent > < Factor' >
                       | ""
-   */
-public ParseTree parseFactor2(ParseTree left){
-  if (match(Token.POW) != null){
-    Power result = new Power();
-    result.setLeft(left);
-    result.setRight(parseExponent());
-    return parseFactor2(result);
-  }
+    */
+    public ParseTree parseFactor2(ParseTree left){
+      if (match(Token.POW) != null){
+        Power result = new Power();
+        result.setLeft(left);
+        result.setRight(parseExponent());
+        return parseFactor2(result);
+      }
 
-  return left;
-}
+      return left;
+    }
 
   /** 
    * Test the parser
