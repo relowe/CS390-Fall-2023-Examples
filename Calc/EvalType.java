@@ -3,5 +3,6 @@ public enum EvalType {
   REAL,
   BOOLEAN,
   VOID,
-  RECORD_DECL
+  RECORD_DECL,
+  ARRAY
 }

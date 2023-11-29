@@ -5,6 +5,7 @@ public class EvalResult
   private double d;
   private boolean b;
   private RecordDeclaration recordDecl;
+  private double [] array;
 
   public EvalResult() {
     type = EvalType.VOID;
@@ -31,6 +32,11 @@ public class EvalResult
   public void setValue(RecordDeclaration recordDecl) {
     type = EvalType.RECORD_DECL;
     this.recordDecl = recordDecl;
+  }
+
+  public void setValue(EvalResult [] value) {
+    type = EvalType.ARRAY;
+    array = value;
   }
 
 
@@ -60,10 +66,16 @@ public class EvalResult
     return recordDecl;
   }
 
+  public EvalResult [] asArray() {
+    if(EvalType != EvalType.ARRAY) return null;
+    return array;
+  }
+
 
   public EvalType getType() {
     return type;
   }
+
 
 
 

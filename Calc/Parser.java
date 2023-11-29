@@ -75,6 +75,7 @@
   /**
   < Statement >  ::= ID < Statement' > NEWLINE
                      | < IO-Operation > NEWLINE
+                     | < Array-Dim > NEWLINE
                      | < Branch > NEWLINE
                      | < LOOP > NEWLINE
                      | < Expression > NEWLINE
@@ -90,6 +91,8 @@
       result = parseStatement2(result);
     } else if(has(Token.INPUT, Token.DISPLAY)) {
       result = parseIOOperation();
+    } else if(has(Token.DIMENSION)) {
+      result = parseArrayDimension(); 
     } else if(has(Token.IF)) {
       result = parseBranch();
     } else if(has(Token.WHILE)) {
@@ -124,6 +127,21 @@
     return result;
   }
 
+  /**
+  < Array-Dim >  ::= DIMENSION ID < Expression >
+  */
+  private ParseTree parseArrayDimension() {
+    match(Token.DIMENSION);
+    ParseTree left = new Variable(match(Token.ID));
+    ParseTree right = parseExpression();
+    ArrayDimension result = new ArrayDimension();
+    result.setLeft(left);
+    result.setRight(right);
+
+    return result;
+  }
+  
+ 
   
 
 
